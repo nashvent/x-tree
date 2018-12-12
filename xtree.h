@@ -95,12 +95,14 @@ struct Nodo{
     int dim;
     Nodo *parent;
     float areac;
+    bool supernode;
     Nodo(int n_dim,bool leaf=false){ //Nodo (3,true) is Leaf && Nodo(3,false) is Data
         dim=n_dim;
         isLeaf=leaf;
         isData=!leaf;
         parent=NULL;
         areac=0;
+        supernode=false;
         //I.resize(n_dim);
     }
     Nodo(int n_dim,Data dt){ 
@@ -110,6 +112,7 @@ struct Nodo{
         I=makeRectangleFromData(dt);
         rPunto=dt;
         areac=0;
+        supernode=false;
     }
     
     bool overlap(vData pI){
@@ -130,15 +133,6 @@ struct Nodo{
         return -1;
     }
 
-    bool deleteChild(Nodo*H){
-        for(size_t i=0;i<child.size();i++)
-            if(child[i]==H){
-                child.erase(child.begin()+i);
-                return true;
-            }   
-        return false;
-    }
-
     void addEntry(Nodo *E){
         clock_t begin = clock(); 
 
@@ -146,7 +140,8 @@ struct Nodo{
         if(ext==-1){
             child.push_back(E);
             E->parent=this;
-            updateRectangleI();
+            //updateRectangleI();
+            addMBR(E);
         }
         else{
             //cout<<"Elemento existe"<<endl;
@@ -155,6 +150,10 @@ struct Nodo{
         double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
         timeAddEntry+=elapsed_secs;   
         
+    }
+
+    void addMBR(Nodo *E){
+        I=makeRectangle(I,E->I,areac);
     }
 
     bool searchData(Data T){
@@ -193,6 +192,29 @@ struct Nodo{
         printVData(I);
     }
 
+    Nodo *chooseSubTree(Nodo *E){
+        if(this->isLeaf){
+            return this;
+        }
+        else{
+            vData EI=E->I;
+            float tempArea=INFINITY;
+            Nodo *TN;
+            int childSize=this->child.size();
+            for(size_t i=0;i<childSize;i++){
+                float nTempArea;
+                makeRectangle(EI,this->child[i]->I,nTempArea);
+                // CL3 /////
+                nTempArea=nTempArea- this->child[i]->areac;
+                if(tempArea>nTempArea){
+                    TN=this->child[i];
+                    tempArea=nTempArea;
+                }
+            }
+            return TN;   
+        }
+    }
+
 };
 
 
@@ -200,6 +222,7 @@ struct Nodo{
 struct XTree{
     int M,m;
     int dim;
+   
     Nodo *root;
     vector<vData> allRectangles;
     vector<Data> allPoints;
@@ -227,6 +250,94 @@ struct XTree{
         return false;
     }
 
+    void insertInicial(){
+
+    }
+    void nInsert(Nodo*entry,Nodo* follow){
+
+
+
+
+    }
+
+
+
+    /// 1:SPLIT   2:SUpernode   3: leaf solo inserto papi    
+    int insert(Nodo*entry,Nodo*current,Nodo*new_nodo){
+        if(current->isLeaf){
+            current->addEntry(entry);
+            if(current->child.size()>M)
+                return 1;
+            return 3;
+        }
+
+        Nodo*follow,*new_son;
+        int return_value;
+        follow=current->chooseSubTree(entry);
+        return_value=insert(entry,follow,new_son);
+
+        if(return_value==1){
+            if(split(follow,new_son)==TRUE){
+                    
+            }
+
+
+        }
+        else if(return_value==2){
+            cout<<"Cree un super nodo"<<endl;
+        }
+        return 3;
+
+    } 
+    
+    /*
+    int insertR(Nodo* entry,Nodo* father){
+        int return_value;
+        Nodo *follow,*new_son;
+        if(father->isLeaf){
+            follow=father;
+            //father=new Nodo(dim);
+
+            father=NULL;
+            follow->addEntry(entry);
+            if(follow->child.size()>M and follow->supernode==false)
+                return_value=2;
+            else
+                return_value=3;
+        }
+        else{
+            follow=father->chooseSubTree(entry);
+            return_value=insertR(entry,follow);
+        }
+        if(return_value==2){ //SPLIT
+            if(split(follow,new_son)==true){
+                if(father==NULL){
+                    father=new Nodo(dim);
+                    root=father;
+                    father->addEntry(follow);
+                }
+                father->addEntry(new_son);
+                if(father->child.size()>M)
+                    return 2;
+                return 3;
+            }   
+            else{
+                follow->supernode=true;
+                return 1;
+            }            
+        } 
+        else if(return_value==1){
+            cout<<"Aparecio un supernodo"<<endl;
+        }
+
+        return 3;
+    }
+    */
+    bool split(Nodo* a1,Nodo* a2){
+        return false;
+    }
+
+    /*
     bool insert(Nodo *E){ 
         
         allPoints.push_back(E->rPunto);
@@ -252,7 +363,6 @@ struct XTree{
         }
         return true;
     }
-
     void chooseLeaf(vData E,Nodo *&N){
         clock_t begin = clock();
         // CL1 ////////
@@ -280,11 +390,10 @@ struct XTree{
         timeChosseLeaf+=elapsed_secs;
         return;
     }
-
     void adjustTree(Nodo* &N,Nodo*&NN){ // Expand tree
         clock_t begin = clock(); 
         // AT1 | ET1 ////////
-            /* Paso AT1 en la declaracion*/
+            // Paso AT1 en la declaracion//
         // AT2 | ET2 ////////
         while(N!=root){
             // AT3 | ET3x ///////
@@ -311,7 +420,6 @@ struct XTree{
         timeAdjustTree+=elapsed_secs;
         return;
     }
-
     //Quadratic Split
     void splitNode(Nodo* &G1,Nodo* &G2){
         clock_t begin = clock(); 
@@ -348,7 +456,7 @@ struct XTree{
         
         return;
     }
-
+    
     void pickSeeds(vector<Nodo*>&LP,Nodo* &E1,Nodo* &E2){
         clock_t begin = clock(); 
         float d=-INFINITY;
@@ -375,7 +483,7 @@ struct XTree{
         E1=LP[indxE1];
         E2=LP[indxE2];
                    
-        /*Remover los seleccionados del grupo*/
+        // Remover los seleccionados del grupo ////
         if(indxE1>indxE2){
             swap(indxE1,indxE2);
         }
@@ -425,7 +533,7 @@ struct XTree{
         clock_t end = clock();
         double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
         timePickNext+=elapsed_secs;
-    }
+    }*/
 
     void print(){
         cout<<"========================================="<<endl;
