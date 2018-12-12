@@ -1,5 +1,4 @@
 #include <bits/stdc++.h>
-
 using namespace std;
 typedef vector<float> Data;
 typedef vector<Data> vData;
@@ -237,7 +236,7 @@ struct Nodo{
 };
 
 typedef pair<int, Nodo*> pi;
-
+float getMinimalDistTime=0;
 
 struct XTree{
     int M,m;
@@ -507,8 +506,10 @@ struct XTree{
     }
 
     float getMinimalDistance(Nodo *P, Data Punto){
+        clock_t begin = clock();
         float dist=0;
-        for(size_t i=0;i<Punto.size();i++){
+        //#pragma omp parallel for simd reduction(+:dist)
+        for(size_t i=0;i<Punto.size()/2;i++){
             if(P->I[i][0]<=Punto[i] and P->I[i][1]>=Punto[i]){
                 dist+=0;    
             }
@@ -521,6 +522,9 @@ struct XTree{
                     dist+=tdMax;
             }
         }
+        clock_t end = clock();
+        double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+        getMinimalDistTime+=elapsed_secs;
         return sqrt(dist);
     }
 
@@ -528,6 +532,7 @@ struct XTree{
         priority_queue<pi, vector<pi>, greater<pi> > pq; 
         Nodo*Ntemp=root;
         vData resp;
+        resp.reserve(1000);
         for(int i=0;i<root->child.size();i++){
             float tmdist=getMinimalDistance(Ntemp->child[i],punto);
             pq.push(make_pair(tmdist,  Ntemp->child[i]));         

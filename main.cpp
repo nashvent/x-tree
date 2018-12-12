@@ -38,18 +38,18 @@ int main(){
     */
 
     int dim=91;
-    XTree xt=XTree(dim,500,1000);
+    XTree xt=XTree(dim,50,100);
     ifstream file("YearPredictionMSD.txt");
     string str;
     int cont=0;
     vData vrd;
-    
     
     while (std::getline(file, str))
     {
         vector<string>temp;
         string strtemp=str;
         Data rnd;
+        rnd.reserve(dim);
         temp=splitString(strtemp);
         for(size_t i=0;i<dim;i++){
             float xtemp = ::atof(temp[18].c_str());
@@ -80,6 +80,8 @@ int main(){
     elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     cout<<"Tiempo KNN: "<<elapsed_secs<<endl;
     //xt.print();
+    cout<<"Get minimal distnace "<<getMinimalDistTime<<endl;
     printVData(knn);
+    
     return 0; 
 }
