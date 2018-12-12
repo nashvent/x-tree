@@ -26,11 +26,10 @@ float distP2P(Data P1,Data P2){
 
 
 vData makeRectangle(vData E1,vData E2,float &area){
-    clock_t begin = clock(); 
     vData R;
     float areaT=1;
     int E1size=E1.size();
-    #pragma omp for
+    R.reserve(E1size);
     for(size_t i=0;i<E1size;i++){
         float tempMax,tempMin;
         if(E1[i][0]>E2[i][0])
@@ -46,15 +45,12 @@ vData makeRectangle(vData E1,vData E2,float &area){
         areaT=areaT*abs(tempMax-tempMin);
     }
     area=areaT;
-    clock_t end = clock();
-    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-    timeMakeRectangle+=elapsed_secs;   
-
     return R;
 }
 
 vData makeRectangleFromData(Data E1){
     vData R;
+    R.reserve(E1.size());
     for(size_t i=0;i<E1.size();i++){
         vector<float>tempDim(2);
         tempDim[0]=tempDim[1]=E1[i];
@@ -88,7 +84,6 @@ void printVData(vData d){
 
 
 float overlap(vData D1,vData D2){
-    clock_t begin = clock(); 
     if(D1.size()== D2.size()) {
         float ovlp=0;
         int dsize=D1.size();
@@ -114,9 +109,6 @@ float overlap(vData D1,vData D2){
 
             }
         }
-        clock_t end = clock();
-        double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-        timeOverlap+=elapsed_secs;  
         return ovlp;
     }
     return 0;
@@ -140,7 +132,8 @@ struct Nodo{
         isData=!leaf;
         parent=NULL;
         areac=0;
-        supernode=false;
+        supernode=false;    
+        //child.reserve(1000);
         //I.resize(n_dim);
     }
     Nodo(int n_dim,Data dt){ 
@@ -151,6 +144,7 @@ struct Nodo{
         rPunto=dt;
         areac=0;
         supernode=false;
+        //child.reserve(1000);
     }
     
     bool overlap(vData pI){
@@ -172,25 +166,14 @@ struct Nodo{
     }
 
     void addEntry(Nodo *E){
-        clock_t begin = clock();  
         child.push_back(E);
         E->parent=this;
-        //
         if(child.size()==1){
             I=E->I;
         }else{
             addMBR(E);
             
-        }
-        
-        /*}
-        else{
-            //cout<<"Elemento existe"<<endl;
-        }*/
-        clock_t end = clock();
-        double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-        timeAddEntry+=elapsed_secs;   
-        
+        }        
     }
 
     void addMBR(Nodo *E){
@@ -203,9 +186,7 @@ struct Nodo{
         return false;
     }
     
-    void updateRectangleI(){
-        clock_t begin = clock();
-        
+    void updateRectangleI(){        
         if(child.size()==1){
             I=child[0]->I;
             areac=0;
@@ -224,9 +205,6 @@ struct Nodo{
             }
             areac=area(I);
         }
-        clock_t end = clock();
-        double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-        timeUpdateRectangle+=elapsed_secs;
     }
 
     void print(){   
@@ -295,7 +273,6 @@ struct XTree{
 
     //1:split, 2:supernodo 3:nada
     int operarNodo(Nodo* current){
-        clock_t begin = clock();
         Nodo*new_son1,*new_son2;
         if(current->child.size()>M and current->supernode==false){
             if(split(current,new_son1,new_son2)){
@@ -318,10 +295,6 @@ struct XTree{
                 return 2;
             }
         }
-
-        clock_t end = clock();
-        double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-        timeOperarNodo+=elapsed_secs;  
         return 3;
 
     }
@@ -331,8 +304,7 @@ struct XTree{
         insert(entry,p);
     }
 
-    int insert(Nodo*entry,Nodo*&current){
-        
+    int insert(Nodo*entry,Nodo*&current){      
         if(current->isLeaf){
             current->addEntry(entry);
             return operarNodo(current);
@@ -347,7 +319,7 @@ struct XTree{
             return operarNodo(current);
         }
         else if(return_value==2){
-            //cout<<"Cree un super nodo"<<endl;
+            //supernodo ;
         }
         return 3;
     } 
@@ -365,9 +337,7 @@ struct XTree{
         G1=new Nodo(dim);
         G2=new Nodo(dim);
         int lpsize=LP.size();
-        
         for(int i=0;i<lpsize;i++){
-            
             if(i<lpsize/2){
                 G1->addEntry(LP[i]);
             }
@@ -398,7 +368,6 @@ struct XTree{
                 G2->updateRectangleI();
                 LP.resize(0);
             }
-
             if(LP.size()>0){
                 pickNext(LP,G1,G2);
             }

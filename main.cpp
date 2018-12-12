@@ -38,12 +38,12 @@ int main(){
     */
 
     int dim=91;
-    XTree xt=XTree(dim,50,100);
+    XTree xt=XTree(dim,500,1000);
     ifstream file("YearPredictionMSD.txt");
     string str;
     int cont=0;
     vData vrd;
-    clock_t begin = clock();
+    
     
     while (std::getline(file, str))
     {
@@ -55,21 +55,30 @@ int main(){
             float xtemp = ::atof(temp[18].c_str());
             rnd.push_back(xtemp);
         }
-        Nodo *tmp=new Nodo(dim,rnd);
-        xt.insertR(tmp);    
-        
         vrd.push_back(rnd);
         cont++;
     }   
+
+    cout<<"Inicia insercion"<<endl;
+    clock_t begin = clock();
+    for(size_t t=0;t<vrd.size();t++){
+        Nodo *tmp=new Nodo(dim,vrd[t]);
+        xt.insertR(tmp);    
+        //if(t%100000==0)
+        //    cout<<t<<endl;
+    }
+
+        
     clock_t end = clock();
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     cout<<"tiempo: "<<elapsed_secs<<endl;
-    cout<<"Tiempo addentry "<<timeAddEntry<<endl;
-    cout<<"Tiempo makerectange "<<timeMakeRectangle<<endl;
-    cout<<"Tiempo operarNodo "<<timeOperarNodo<<endl;
-    cout<<"Tiempo overlap "<<timeOverlap<<endl;
+    
+    begin = clock();
+    
     vData knn=xt.searchKNN(vrd[0],4);
-    cout<<"Pasee"<<endl;
+    end = clock();
+    elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    cout<<"Tiempo KNN: "<<elapsed_secs<<endl;
     //xt.print();
     printVData(knn);
     return 0; 
