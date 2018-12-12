@@ -36,7 +36,7 @@ int main(){
     vData knn=xt.searchKNN(vbusq,4);
     printVData(knn);
     */
-    int m=50,M=100;
+    int m=500,M=1000;
     int dim=91;
     XTree xt=XTree(dim,m,M);
     ifstream file("YearPredictionMSD.txt");
