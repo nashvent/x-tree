@@ -5,7 +5,7 @@ typedef vector<float> Data;
 typedef vector<Data> vData;
 
 /////////////////////////
-float timeAdjustTree=0,timeChosseLeaf=0,timeSplit=0,timeUpdateRectangle=0,timeAddEntry=0,timePickSeeds=0,timePickNext=0,
+float timeOperarNodo=0,timeOverlap=0,timeSplit=0,timeUpdateRectangle=0,timeAddEntry=0,timePickSeeds=0,timePickNext=0,
 timeMakeRectangle=0;
 /////////////////////////
 float area(vData mm){
@@ -30,6 +30,7 @@ vData makeRectangle(vData E1,vData E2,float &area){
     vData R;
     float areaT=1;
     int E1size=E1.size();
+    #pragma omp for
     for(size_t i=0;i<E1size;i++){
         float tempMax,tempMin;
         if(E1[i][0]>E2[i][0])
@@ -87,6 +88,7 @@ void printVData(vData d){
 
 
 float overlap(vData D1,vData D2){
+    clock_t begin = clock(); 
     if(D1.size()== D2.size()) {
         float ovlp=0;
         int dsize=D1.size();
@@ -112,6 +114,9 @@ float overlap(vData D1,vData D2){
 
             }
         }
+        clock_t end = clock();
+        double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+        timeOverlap+=elapsed_secs;  
         return ovlp;
     }
     return 0;
@@ -167,22 +172,21 @@ struct Nodo{
     }
 
     void addEntry(Nodo *E){
-        clock_t begin = clock(); 
-        int ext=exist(E->I);
-        if(ext==-1){
-            child.push_back(E);
-            E->parent=this;
-            //updateRectangleI();
-            if(child.size()==1){
-                I=E->I;
-            }else{
-                addMBR(E);
-            }
+        clock_t begin = clock();  
+        child.push_back(E);
+        E->parent=this;
+        //
+        if(child.size()==1){
+            I=E->I;
+        }else{
+            addMBR(E);
             
         }
+        
+        /*}
         else{
             //cout<<"Elemento existe"<<endl;
-        }
+        }*/
         clock_t end = clock();
         double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
         timeAddEntry+=elapsed_secs;   
@@ -291,8 +295,9 @@ struct XTree{
 
     //1:split, 2:supernodo 3:nada
     int operarNodo(Nodo* current){
+        clock_t begin = clock();
         Nodo*new_son1,*new_son2;
-        if(current->child.size()>M){
+        if(current->child.size()>M and current->supernode==false){
             if(split(current,new_son1,new_son2)){
                 Nodo *padre;
                 if(current==root){
@@ -313,6 +318,10 @@ struct XTree{
                 return 2;
             }
         }
+
+        clock_t end = clock();
+        double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+        timeOperarNodo+=elapsed_secs;  
         return 3;
 
     }
@@ -323,15 +332,17 @@ struct XTree{
     }
 
     int insert(Nodo*entry,Nodo*&current){
+        
         if(current->isLeaf){
             current->addEntry(entry);
             return operarNodo(current);
         }
-        Nodo*follow,*new_son;
+        Nodo*follow;
         int return_value;
         
         follow=current->chooseSubTree(entry);
         return_value=insert(entry,follow);
+        
         if(return_value==1){
             return operarNodo(current);
         }
@@ -341,51 +352,6 @@ struct XTree{
         return 3;
     } 
     
-    /*
-    int insertR(Nodo* entry,Nodo* father){
-        int return_value;
-        Nodo *follow,*new_son;
-        if(father->isLeaf){
-            follow=father;
-            //father=new Nodo(dim);
-
-            father=NULL;
-            follow->addEntry(entry);
-            if(follow->child.size()>M and follow->supernode==false)
-                return_value=2;
-            else
-                return_value=3;
-        }
-        else{
-            follow=father->chooseSubTree(entry);
-            return_value=insertR(entry,follow);
-        }
-        if(return_value==2){ //SPLIT
-            if(split(follow,new_son)==true){
-                if(father==NULL){
-                    father=new Nodo(dim);
-                    root=father;
-                    father->addEntry(follow);
-                }
-                father->addEntry(new_son);
-                if(father->child.size()>M)
-                    return 2;
-                return 3;
-            }   
-            else{
-                follow->supernode=true;
-                return 1;
-            }            
-        } 
-        else if(return_value==1){
-            cout<<"Aparecio un supernodo"<<endl;
-        }
-
-        return 3;
-    }
-    */
-
-
     bool split(Nodo*curr,Nodo*&te1,Nodo* &te2){
         splitNode2(curr->child,te1,te2);
         float ovlp=overlap(te1->I,te2->I);
@@ -399,7 +365,9 @@ struct XTree{
         G1=new Nodo(dim);
         G2=new Nodo(dim);
         int lpsize=LP.size();
+        
         for(int i=0;i<lpsize;i++){
+            
             if(i<lpsize/2){
                 G1->addEntry(LP[i]);
             }
