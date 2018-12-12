@@ -76,7 +76,12 @@ void printData(Data d){
 
 void printVData(vData d){
     for(int i=0;i<d.size();i++){
-        cout<<"["<<d[i][0]<<","<<d[i][1]<<"] ";
+        cout<<"[";
+        for(int j=0;j<d[i].size();j++){
+            cout<<d[i][j]<<",";
+        }
+        cout<<"]"<<endl;
+        
     }
     cout<<endl;
 }
@@ -509,7 +514,7 @@ struct XTree{
         clock_t begin = clock();
         float dist=0;
         //#pragma omp parallel for simd reduction(+:dist)
-        for(size_t i=0;i<Punto.size()/2;i++){
+        for(size_t i=0;i<Punto.size()/4;i++){
             if(P->I[i][0]<=Punto[i] and P->I[i][1]>=Punto[i]){
                 dist+=0;    
             }

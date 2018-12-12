@@ -3,10 +3,12 @@ Compilar usando
 ```
 g++ main.cpp -o main
 ```
-Ejecutar indicando m y M respectivamente
+Ejecutar 
 ```
-./main 2 4
+./main
 ```
+Decargar dataset desde : https://archive.ics.uci.edu/ml/datasets/yearpredictionmsd
+Descomprimir y usar el nombre de archivo 'YearPredictionMSD.txt'
 
 Analizar CSV: columnas
 ```

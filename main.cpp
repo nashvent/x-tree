@@ -36,9 +36,9 @@ int main(){
     vData knn=xt.searchKNN(vbusq,4);
     printVData(knn);
     */
-
+    int m=50,M=100;
     int dim=91;
-    XTree xt=XTree(dim,50,100);
+    XTree xt=XTree(dim,m,M);
     ifstream file("YearPredictionMSD.txt");
     string str;
     int cont=0;
@@ -60,28 +60,27 @@ int main(){
     }   
 
     cout<<"Inicia insercion"<<endl;
+    cout<<"m: "<<m<<" M:"<<M<<endl;
     clock_t begin = clock();
     for(size_t t=0;t<vrd.size();t++){
         Nodo *tmp=new Nodo(dim,vrd[t]);
         xt.insertR(tmp);    
-        //if(t%100000==0)
-        //    cout<<t<<endl;
+        if(t%100000==0)
+            cout<<t<<" elementos insertados"<<endl;
     }
 
         
     clock_t end = clock();
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-    cout<<"tiempo: "<<elapsed_secs<<endl;
+    cout<<"tiempo: "<<elapsed_secs<<" segundos"<<endl;
     
     begin = clock();
     
     vData knn=xt.searchKNN(vrd[0],4);
     end = clock();
     elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-    cout<<"Tiempo KNN: "<<elapsed_secs<<endl;
-    //xt.print();
-    cout<<"Get minimal distnace "<<getMinimalDistTime<<endl;
-    printVData(knn);
+    cout<<"Tiempo KNN: "<<elapsed_secs<<" segundos"<<endl;
+    //printVData(knn);
     
     return 0; 
 }
