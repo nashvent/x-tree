@@ -159,7 +159,6 @@ struct Nodo{
     }
 
     int exist(vData pI){
-        cout<<"entro exist"<<endl;
         for(size_t i=0;i<child.size();i++){
             if(child[i]->I==pI){
                 return i;
@@ -170,18 +169,14 @@ struct Nodo{
 
     void addEntry(Nodo *E){
         clock_t begin = clock(); 
-        cout<<"etrny antes ext"<<endl;
         int ext=exist(E->I);
-        cout<<"etrny despues ext"<<endl;
         if(ext==-1){
             child.push_back(E);
             E->parent=this;
             //updateRectangleI();
             if(child.size()==1){
-                cout<<"addEntry encotr"<<endl;
                 I=E->I;
             }else{
-                cout<<"addEntry ele"<<endl;
                 addMBR(E);
             }
             
@@ -207,21 +202,14 @@ struct Nodo{
     
     void updateRectangleI(){
         clock_t begin = clock();
-        cout<<"Entro update rectangle"<<endl;
+        
         if(child.size()==1){
-            cout<<"entro if"<<endl;
             I=child[0]->I;
             areac=0;
         }
         else{
-            cout<<"entro else"<<endl;
-
             for(size_t i=0;i<child.size();i++){
-                cout<<"Entro for"<<endl;
                 for(size_t j=0;j<dim;j++){
-                    cout<<"Entro 2for"<<endl;
-                    cout<<"child[i]->I[j][0] "<<child[i]->I[j][0]<<endl;
-                    cout<<"I[j][0] "<<I[j][0]<<endl;
                     if(child[i]->I[j][0] < I[j][0] ){
                         I[j][0]=child[i]->I[j][0];
                     }
@@ -282,7 +270,7 @@ struct XTree{
         m=n_m;
         root=new Nodo(n_dim,true);
         dim=n_dim;
-        max_overlap=20;
+        max_overlap=dim*10;
     }
 
     bool search(Nodo *&p,vData pI){ //Buscar un punto o un rectangulo
@@ -341,13 +329,14 @@ struct XTree{
         }
         Nodo*follow,*new_son;
         int return_value;
+        
         follow=current->chooseSubTree(entry);
         return_value=insert(entry,follow);
         if(return_value==1){
             return operarNodo(current);
         }
         else if(return_value==2){
-            cout<<"Cree un super nodo"<<endl;
+            //cout<<"Cree un super nodo"<<endl;
         }
         return 3;
     } 
@@ -398,12 +387,27 @@ struct XTree{
 
 
     bool split(Nodo*curr,Nodo*&te1,Nodo* &te2){
-        splitNode(curr->child,te1,te2);
+        splitNode2(curr->child,te1,te2);
         float ovlp=overlap(te1->I,te2->I);
         if(ovlp<max_overlap){
             return true;
         }
         return false;
+    }
+
+    void splitNode2(vector<Nodo*>LP,Nodo* &G1,Nodo* &G2){
+        G1=new Nodo(dim);
+        G2=new Nodo(dim);
+        int lpsize=LP.size();
+        for(int i=0;i<lpsize;i++){
+            if(i<lpsize/2){
+                G1->addEntry(LP[i]);
+            }
+            else{
+                G2->addEntry(LP[i]);
+            }
+        }
+
     }
 
     void splitNode(vector<Nodo*>LP,Nodo* &G1,Nodo* &G2){
@@ -414,8 +418,8 @@ struct XTree{
         G1=new Nodo(dim,false);
         G2=new Nodo(dim,false); //Nodos como grupos G1, G2;
         G1->addEntry(E1);
-        G2->addEntry(E2); 
-        while(LP.size()>0){   
+        G2->addEntry(E2);
+        while(LP.size()>0){  
             if( (G1->child.size()+LP.size())==m ){
                 G1->child.insert(G1->child.end(), LP.begin(), LP.end());               
                 G1->updateRectangleI();
@@ -427,8 +431,10 @@ struct XTree{
                 LP.resize(0);
             }
 
-            if(LP.size()>0)
+            if(LP.size()>0){
                 pickNext(LP,G1,G2);
+            }
+                
         }
         clock_t end = clock();
         double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
@@ -581,29 +587,16 @@ struct XTree{
         return sqrt(dist);
     }
 
-    void searchRadio(Data Punto, float radio){
-        vector<Nodo*> RList=root->child;
-        Data RDist;
-        radioPoints.clear();
-        for(size_t i=0;i<RList.size();i++){
-            if(RList[i]->isLeaf){
-                Nodo*LN=RList[i];
-                for(int j=0;j<LN->child.size();j++){
-                    Nodo*tempLN=LN->child[j];
-                    Data TP=tempLN->rPunto;
-                    if(distP2P(Punto,TP)<radio){
-                        radioPoints.push_back(TP);
-                    }
-                }
-            }
-            else{
-                float tdist=getMinimalDistance(RList[i],Punto);
-                if(tdist<=radio){
-                    RList.insert(RList.end(), RList[i]->child.begin(), RList[i]->child.end());
-                }
-            }
-
+    void searchKNN(Data punto){
+        vector<Nodo*>Pendientes;
+        vector<Nodo*>Puntos;
+        Nodo*Ntemp=root;
+        int stemp=Ntemp->child.size();
+        float mdist=INFINITY;
+        for(int i=0;i<stemp;i++){
+            float tmdist=
         }
 
     }
+
 };

@@ -3,18 +3,18 @@ using namespace std;
 
 int main(){
 
-    int dim=2;
+    int dim=30;
     XTree xt=XTree(dim,2,4);
-    for(int i=0;i<6;i++){
+    clock_t begin = clock();  
+    for(int i=0;i<1000;i++){     
         Data rnd=randomData(dim);
-        cout<<"---------------------"<<endl;
-        printData(rnd);
-        cout<<"---------------------"<<endl;
-        
         Nodo *tmp=new Nodo(dim,rnd);
-        xt.insertR(tmp); 
-        xt.print();     	
+        xt.insertR(tmp);    
+        if(i%100==0){
+            cout<<i<<endl;
+        }
     }
-    xt.print();
-
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    cout<<"tiempo: "<<elapsed_secs<<endl;
 }
