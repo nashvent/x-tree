@@ -3,7 +3,7 @@ using namespace std;
 
 int main(){
 
-    int dim=30;
+    int dim=2;
     XTree xt=XTree(dim,2,4);
     clock_t begin = clock();  
     for(int i=0;i<1000;i++){     

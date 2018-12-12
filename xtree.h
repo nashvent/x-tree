@@ -594,7 +594,7 @@ struct XTree{
         int stemp=Ntemp->child.size();
         float mdist=INFINITY;
         for(int i=0;i<stemp;i++){
-            float tmdist=
+            //float tmdist=
         }
 
     }
