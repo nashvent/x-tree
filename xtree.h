@@ -4,7 +4,6 @@ using namespace std;
 typedef vector<float> Data;
 typedef vector<Data> vData;
 
-
 /////////////////////////
 float timeAdjustTree=0,timeChosseLeaf=0,timeSplit=0,timeUpdateRectangle=0,timeAddEntry=0,timePickSeeds=0,timePickNext=0,
 timeMakeRectangle=0;
@@ -255,6 +254,7 @@ struct Nodo{
 
 };
 
+typedef pair<int, Nodo*> pi;
 
 
 struct XTree{
@@ -587,15 +587,34 @@ struct XTree{
         return sqrt(dist);
     }
 
-    void searchKNN(Data punto){
-        vector<Nodo*>Pendientes;
-        vector<Nodo*>Puntos;
+    vData searchKNN(Data punto,int num){
+        priority_queue<pi, vector<pi>, greater<pi> > pq; 
         Nodo*Ntemp=root;
-        int stemp=Ntemp->child.size();
-        float mdist=INFINITY;
-        for(int i=0;i<stemp;i++){
-            //float tmdist=
+        vData resp;
+        for(int i=0;i<root->child.size();i++){
+            float tmdist=getMinimalDistance(Ntemp->child[i],punto);
+            pq.push(make_pair(tmdist,  Ntemp->child[i]));         
         }
+
+        while(!pq.empty()) {
+            Nodo *temp=pq.top().second;
+            pq.pop();
+            if(temp->isData){
+                resp.push_back(temp->rPunto);
+                if(resp.size()==num){
+                    return resp;
+                }
+            }
+            else{
+                for(int i=0;i<temp->child.size();i++){
+                    float tmdist=getMinimalDistance(Ntemp->child[i],punto);
+                    pq.push(make_pair(tmdist,Ntemp->child[i]));
+                }   
+            }
+
+        }
+
+
 
     }
 
