@@ -86,6 +86,40 @@ void printVData(vData d){
     cout<<endl;
 }
 
+
+float overlap(vData D1,vData D2){
+    if(D1.size()== D2.size()) {
+        float ovlp=0;
+        int dsize=D1.size();
+        for(size_t i=0;i<dsize;i++){
+            Data tD1=D1[i];
+            Data tD2=D2[i];
+            if(tD1[0]<tD2[1] and tD2[0]<tD1[1]){
+                float minMax,maxMin;
+                if(tD1[1]<tD2[1]){
+                    minMax=tD1[1];
+                }
+                else{
+                    minMax=tD2[1];
+                }
+
+                if(tD1[0]>tD2[0]){
+                    maxMin=tD1[0];
+                }
+                else{
+                    maxMin=tD2[0];
+                }
+                ovlp+=abs(minMax-maxMin);
+
+            }
+        }
+        return ovlp;
+    }
+    return 0;
+
+}
+
+
 struct Nodo{
     bool isLeaf,wasSplit,isData;
     vData tuples; //tuplas [tupla,tupla,tupla] || [x,y,z,r,...],[x,y,z,r,...],[x,y,z,r,...]
@@ -125,6 +159,7 @@ struct Nodo{
     }
 
     int exist(vData pI){
+        cout<<"entro exist"<<endl;
         for(size_t i=0;i<child.size();i++){
             if(child[i]->I==pI){
                 return i;
@@ -135,13 +170,21 @@ struct Nodo{
 
     void addEntry(Nodo *E){
         clock_t begin = clock(); 
-
+        cout<<"etrny antes ext"<<endl;
         int ext=exist(E->I);
+        cout<<"etrny despues ext"<<endl;
         if(ext==-1){
             child.push_back(E);
             E->parent=this;
             //updateRectangleI();
-            addMBR(E);
+            if(child.size()==1){
+                cout<<"addEntry encotr"<<endl;
+                I=E->I;
+            }else{
+                cout<<"addEntry ele"<<endl;
+                addMBR(E);
+            }
+            
         }
         else{
             //cout<<"Elemento existe"<<endl;
@@ -164,14 +207,21 @@ struct Nodo{
     
     void updateRectangleI(){
         clock_t begin = clock();
-        
+        cout<<"Entro update rectangle"<<endl;
         if(child.size()==1){
+            cout<<"entro if"<<endl;
             I=child[0]->I;
             areac=0;
         }
         else{
+            cout<<"entro else"<<endl;
+
             for(size_t i=0;i<child.size();i++){
+                cout<<"Entro for"<<endl;
                 for(size_t j=0;j<dim;j++){
+                    cout<<"Entro 2for"<<endl;
+                    cout<<"child[i]->I[j][0] "<<child[i]->I[j][0]<<endl;
+                    cout<<"I[j][0] "<<I[j][0]<<endl;
                     if(child[i]->I[j][0] < I[j][0] ){
                         I[j][0]=child[i]->I[j][0];
                     }
@@ -222,7 +272,7 @@ struct Nodo{
 struct XTree{
     int M,m;
     int dim;
-   
+    float max_overlap;
     Nodo *root;
     vector<vData> allRectangles;
     vector<Data> allPoints;
@@ -232,6 +282,7 @@ struct XTree{
         m=n_m;
         root=new Nodo(n_dim,true);
         dim=n_dim;
+        max_overlap=20;
     }
 
     bool search(Nodo *&p,vData pI){ //Buscar un punto o un rectangulo
@@ -250,44 +301,55 @@ struct XTree{
         return false;
     }
 
-    void insertInicial(){
+    //1:split, 2:supernodo 3:nada
+    int operarNodo(Nodo* current){
+        Nodo*new_son1,*new_son2;
+        if(current->child.size()>M){
+            if(split(current,new_son1,new_son2)){
+                Nodo *padre;
+                if(current==root){
+                    padre=new Nodo(dim);
+                    root=padre;
+                }
+                else{
+                    padre=current->parent;
+                }
+                new_son1->isLeaf=current->isLeaf;
+                new_son2->isLeaf=current->isLeaf;
+                padre->addEntry(new_son1);
+                padre->addEntry(new_son2);
+                return 1;
+            }
+            else{
+                current->supernode=true;
+                return 2;
+            }
+        }
+        return 3;
 
     }
-    void nInsert(Nodo*entry,Nodo* follow){
-
-
-
-
+    
+    void insertR(Nodo *entry){
+        Nodo *p=root;
+        insert(entry,p);
     }
 
-
-
-    /// 1:SPLIT   2:SUpernode   3: leaf solo inserto papi    
-    int insert(Nodo*entry,Nodo*current,Nodo*new_nodo){
+    int insert(Nodo*entry,Nodo*&current){
         if(current->isLeaf){
             current->addEntry(entry);
-            if(current->child.size()>M)
-                return 1;
-            return 3;
+            return operarNodo(current);
         }
-
         Nodo*follow,*new_son;
         int return_value;
         follow=current->chooseSubTree(entry);
-        return_value=insert(entry,follow,new_son);
-
+        return_value=insert(entry,follow);
         if(return_value==1){
-            if(split(follow,new_son)==TRUE){
-                    
-            }
-
-
+            return operarNodo(current);
         }
         else if(return_value==2){
             cout<<"Cree un super nodo"<<endl;
         }
         return 3;
-
     } 
     
     /*
@@ -333,111 +395,29 @@ struct XTree{
         return 3;
     }
     */
-    bool split(Nodo* a1,Nodo* a2){
+
+
+    bool split(Nodo*curr,Nodo*&te1,Nodo* &te2){
+        splitNode(curr->child,te1,te2);
+        float ovlp=overlap(te1->I,te2->I);
+        if(ovlp<max_overlap){
+            return true;
+        }
         return false;
     }
 
-    /*
-    bool insert(Nodo *E){ 
-        
-        allPoints.push_back(E->rPunto);
-        Nodo* L,*LL;
-        LL=NULL;       
-        // I1 ////////
-        chooseLeaf(E->I,L);
-        
-        // I2 ///////
-        L->addEntry(E);
-        if(L->child.size()>M){
-            splitNode(L,LL);            
-        }
-        // I3 ///////
-        adjustTree(L,LL); // SI no hubo split LL==NULL
-        // I4 //////
-        
-        if(L==root and LL!=NULL){
-            Nodo* tempRoot=new Nodo(dim,false);
-            tempRoot->addEntry(L);
-            tempRoot->addEntry(LL);
-            root=tempRoot;
-        }
-        return true;
-    }
-    void chooseLeaf(vData E,Nodo *&N){
-        clock_t begin = clock();
-        // CL1 ////////
-        N=root;
-        // CL2  /////// 
-        while(!N->isLeaf){
-            float tempArea=INFINITY;
-            Nodo *TN;
-            int childSize=N->child.size();
-            for(size_t i=0;i<childSize;i++){
-                float nTempArea;
-                makeRectangle(E,N->child[i]->I,nTempArea);
-                // CL3 /////
-                nTempArea=nTempArea- N->child[i]->areac;
-                if(tempArea>nTempArea){
-                    TN=N->child[i];
-                    tempArea=nTempArea;
-                }
-            }
-            // CL4 /////
-            N=TN;
-        }
-        clock_t end = clock();
-  	    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-        timeChosseLeaf+=elapsed_secs;
-        return;
-    }
-    void adjustTree(Nodo* &N,Nodo*&NN){ // Expand tree
+    void splitNode(vector<Nodo*>LP,Nodo* &G1,Nodo* &G2){
         clock_t begin = clock(); 
-        // AT1 | ET1 ////////
-            // Paso AT1 en la declaracion//
-        // AT2 | ET2 ////////
-        while(N!=root){
-            // AT3 | ET3x ///////
-            Nodo *P=N->parent;
-            P->isLeaf=false;
-            // AT4 | ET4 ////////
-            Nodo *PP=NULL;
-            if(NN!=NULL){
-                P->addEntry(NN);
-                if(P->child.size()>M){
-                    splitNode(P,PP);
-                }
-            }
-            P->updateRectangleI();
-            // AT5 | ET5 ////////
-            N=P;
-            NN=PP;
-            
-            
-        }
-        root->updateRectangleI();
-        clock_t end = clock();
-        double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-        timeAdjustTree+=elapsed_secs;
-        return;
-    }
-    //Quadratic Split
-    void splitNode(Nodo* &G1,Nodo* &G2){
-        clock_t begin = clock(); 
-        // QS1 ////////////
         Nodo *E1,*E2;
         float Ed1,Ed2;
-        vector<Nodo*>LP;
-        LP=G1->child;
-        bool checkLeaf=G1->isLeaf;
-        pickSeeds(LP,E1,E2);
-        G1->child.clear();
-        G2=new Nodo(dim,checkLeaf); //Nodos como grupos G1, G2;
+        pickSeeds(LP,E1,E2);       
+        G1=new Nodo(dim,false);
+        G2=new Nodo(dim,false); //Nodos como grupos G1, G2;
         G1->addEntry(E1);
         G2->addEntry(E2); 
-        // QS2 //////////
         while(LP.size()>0){   
             if( (G1->child.size()+LP.size())==m ){
-                G1->child.insert(G1->child.end(), LP.begin(), LP.end());
+                G1->child.insert(G1->child.end(), LP.begin(), LP.end());               
                 G1->updateRectangleI();
                 LP.resize(0);
             }
@@ -446,14 +426,13 @@ struct XTree{
                 G2->updateRectangleI();
                 LP.resize(0);
             }
-            // QS3 ////////
+
             if(LP.size()>0)
                 pickNext(LP,G1,G2);
         }
         clock_t end = clock();
         double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
         timeSplit+=elapsed_secs;
-        
         return;
     }
     
@@ -461,7 +440,7 @@ struct XTree{
         clock_t begin = clock(); 
         float d=-INFINITY;
         int indxE1,indxE2;
-        // PS1 //////////////
+        
         for(int x1=0;x1<LP.size();x1++){
             for(int x2=0;x2<LP.size();x2++){
                 if(x1!=x2){
@@ -533,7 +512,7 @@ struct XTree{
         clock_t end = clock();
         double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
         timePickNext+=elapsed_secs;
-    }*/
+    }
 
     void print(){
         cout<<"========================================="<<endl;
