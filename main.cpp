@@ -52,7 +52,7 @@ int main(){
         rnd.reserve(dim);
         temp=splitString(strtemp);
         for(size_t i=0;i<dim;i++){
-            float xtemp = ::atof(temp[18].c_str());
+            float xtemp = ::atof(temp[i].c_str());
             rnd.push_back(xtemp);
         }
         vrd.push_back(rnd);
@@ -69,7 +69,7 @@ int main(){
             cout<<t<<" elementos insertados"<<endl;
     }
 
-        
+    cout<<vrd.size()<<" elementos insertados"<<endl;
     clock_t end = clock();
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     cout<<"tiempo: "<<elapsed_secs<<" segundos"<<endl;
